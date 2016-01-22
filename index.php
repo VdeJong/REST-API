@@ -11,23 +11,28 @@ $url = "https://stud.hosted.hr.nl/0892526/rest/players/";
 switch($method)
 {
     case "GET":
-        // SELECT * FROM userinfo WHERE name LIKE $name
-
         $id = (isset($_GET['id']) ? $_GET['id'] : null);
         $start = isset($_GET['start']) ? $_GET['start'] : 1;
         $limit = isset($_GET['limit']) ? $_GET['limit'] : null;
 
         $sql = "SELECT * FROM players" .($id && !$limit ? " WHERE id =".$id : "").(!$id && $limit ? " LIMIT ".$limit." OFFSET ".($start -1) : "");
         $result = $conn->query($sql);
-        
-        if ($id == null )
+
+        /*
+            If id is set, you're in the collection.
+           Than show pagination and links
+        */
+
+        if ($id == null)
         {
             $rows = array();
             $rows["items"] = array();
-            $rows["links"] = [[
+            $rows["links"] = [
+                [
                 "rel" => "self",
                 "href" => $url
-            ]];
+                ]
+            ];
             $rows["pagination"] = array();
 
             while ($r = mysqli_fetch_assoc($result))
@@ -43,12 +48,15 @@ switch($method)
             $limit = ($limit > $total ? $total : $limit);
             $start = (!$start ? 1 : $start);
             $num_rows = $result -> num_rows;
+
+
             $totalPages = ceil($total / $num_rows);
             $currentPage = ceil($start / $limit);
             $nextPageStart = ($start + $limit) > $total ? $total : ($start + $limit);
             $nextPage = ceil($start / $limit) + 1 > ceil($total / $num_rows) ? ceil($total / $num_rows) : ceil($start / $limit) + 1;
             $previousPageStart = $start - $limit < 1 ? 1 : $start - $limit;
             $previousPage = ceil($previousPageStart / $limit) < 1 ? 1 : ceil($previousPageStart / $limit);
+
             if ($currentPage < 1) $currentPage = 1;
             $rows["pagination"]["currentPage"] = $currentPage;
             $rows["pagination"]["currentItems"] = $num_rows;
@@ -77,7 +85,8 @@ switch($method)
             $rows["pagination"]["links"] = [$firstPagination, $lastPagination,$previousPagination, $nextPagination];
         }
 
-        else {
+        else
+        {
             $rows = mysqli_fetch_assoc($result);
 
             if (count($rows) == 0 )
@@ -124,8 +133,8 @@ switch($method)
             $body = file_get_contents("php://input");
             $json = json_decode($body);
 
-            if (isset($json->name) && (!empty($json->name) && isset($json->club) && !empty($json->club) && isset($json->age) && !empty($json->age) && isset($json->nationality) && !empty($json->nationality))){
-
+            if (isset($json->name) && (!empty($json->name) && isset($json->club) && !empty($json->club) && isset($json->age) && !empty($json->age) && isset($json->nationality) && !empty($json->nationality)))
+            {
                 $name = $json->name;
                 $club = $json->club;
                 $age = $json->age;
@@ -215,8 +224,8 @@ switch($method)
 
         $id = $_GET['id'];
 
-        if ($id = (isset($_GET['id']) ? $_GET['id'] : null)) {
-
+        if ($id = (isset($_GET['id']) ? $_GET['id'] : null))
+        {
              $body = file_get_contents("php://input");
              $json = json_decode($body);
 
@@ -231,7 +240,8 @@ switch($method)
                     SET name = '$name', age = '$age', club = '$club', nationality = '$nationality'
                     WHERE id = '$id'";
 
-                 if ($conn->query($sql)) {
+                 if ($conn->query($sql))
+                 {
                      http_response_code(201);
                  }
              }
@@ -240,21 +250,10 @@ switch($method)
              {
                  http_response_code(406);
              }
-
-//             else {
-//                 $sql = "UPDATE players (name, age, club, nationality)
-//                    SET ($name, $age, $club, $nationality)
-//                    WHERE 'id' = $id ";
-//
-//                 if ($conn->query($sql)) {
-//                     http_response_code(201);
-//                 } else {
-//                     echo "Error: " . $sql . "<br>" . $conn->error;
-//                 }
-//             }
          }
 
-         else {
+         else
+         {
              http_response_code(405);
          }
 
@@ -269,39 +268,39 @@ switch($method)
             header("Allow: GET,PUT,DELETE,OPTIONS");
         }
 
-        else {
+        else
+        {
             header("Allow: GET,POST,OPTIONS");
         }
-        // check when options method is used
-//        if ($_SERVER['REQUEST_URI'] == '/RESTful%20webservices/REST%20API/index.php')
-//        {
-//            header("Allow: GET, POST, OPTIONS");
-//        }
-//
-//        elseif ($_SERVER['REQUEST_URI'] == '/0892526/rest/players')
-//        {
-//            header("Allow: GET, POST, OPTIONS");
-//        }
-//
-//        else {
-//            http_response_code(405);
-//        }
 
         break;
-
-    // etc...
 }
 
-function array_to_xml($data, &$xml) {
-    foreach($data as $key => $value) {
-        if (is_array($value)) {
-            if (!is_numeric($key)){
+
+/*
+Function to output xml
+*/
+
+function array_to_xml($data, &$xml)
+{
+    foreach($data as $key => $value)
+    {
+        if (is_array($value))
+        {
+            if (!is_numeric($key))
+            {
                 $subnode = $xml->addChild("$key");
                 array_to_xml($value, $subnode);
-            } else {
+            }
+
+            else
+            {
                 array_to_xml($value, $xml);
             }
-        } else {
+        }
+
+        else
+        {
             $xml->addChild("$key","$value");
         }
     }
